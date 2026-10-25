@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+langchain
+langchain-community
+langchain-google-genai
+langchain-text-splitters
+langchain-classic
+chromadb
+pypdf
+python-dotenv
+pysqlite3-binary
+fastembed
+aiofiles

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Engine Document Intelligence (PDF Chatter) | Architectural Showcase</title>
+  <meta name="description" content="Containerized RAG microservice with vector similarity search, dynamic fallback re-ranking, and automated Kubernetes CI/CD.">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              violet: '#8b5cf6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .glow-violet {
+      box-shadow: 0 0 45px -10px rgba(139, 92, 246, 0.4);
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel:hover {
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+    .grid-bg {
+      background-image: radial-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-violet-500/30 selection:text-violet-200 grid-bg relative overflow-x-hidden font-sans">
+
+  <!-- Ambient Light Orbs -->
+  <div class="fixed top-0 left-1/3 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+  <div class="fixed bottom-10 right-10 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400">
+          <i data-lucide="file-search" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-bold tracking-wider text-slate-100">PDF Chatter</span>
+          <span class="text-xs text-violet-400 ml-2 font-mono px-2 py-0.5 rounded-full bg-violet-950/60 border border-violet-800">K8S-RAG</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm font-medium">
+        <a href="#metrics" class="text-slate-400 hover:text-violet-400 transition-colors">Metrics</a>
+        <a href="#architecture" class="text-slate-400 hover:text-violet-400 transition-colors">Architecture</a>
+        <a href="#docker" class="text-slate-400 hover:text-violet-400 transition-colors">Deployment</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 pt-12 pb-24 space-y-20">
+
+    <!-- Hero Section -->
+    <section class="text-center max-w-4xl mx-auto space-y-6 pt-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-950/50 border border-violet-700/50 text-violet-300 text-xs font-semibold tracking-wide uppercase">
+        <i data-lucide="cloud-cog" class="w-3.5 h-3.5 text-violet-400"></i>
+        <span>Cloud Infrastructure & GenAI</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        Multi-Engine Document Intelligence <br />
+        <span class="bg-gradient-to-r from-violet-400 via-fuchsia-300 to-cyan-400 bg-clip-text text-transparent">
+          (PDF Chatter RAG Engine)
+        </span>
+      </h1>
+
+      <p class="text-lg text-slate-300 leading-relaxed max-w-3xl mx-auto">
+        Containerized Retrieval-Augmented Generation (RAG) microservice leveraging vector similarity clustering, semantic chunking, and dual Gemini/LangChain inference pipelines with automated Kubernetes orchestration.
+      </p>
+
+      <!-- Stack Tags -->
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-400"></i> FastAPI
+        </span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400"></i> Google Gemini API
+        </span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="box" class="w-3.5 h-3.5 text-sky-400"></i> Docker & Minikube
+        </span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="link" class="w-3.5 h-3.5 text-amber-400"></i> LangChain
+        </span>
+        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5 text-violet-400"></i> ChromaDB (HNSW)
+        </span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-6 flex flex-wrap items-center justify-center gap-4">
+        <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-base hover:from-violet-500 hover:to-indigo-500 transition-all transform hover:-translate-y-1 shadow-2xl glow-violet">
+          <i data-lucide="message-square" class="w-5 h-5"></i>
+          <span>Open RAG Workspace UI</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+        </a>
+        <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-6 py-4 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-semibold text-base hover:bg-slate-800 transition-all">
+          <i data-lucide="file-code" class="w-5 h-5 text-violet-400"></i>
+          <span>Inspect FastAPI Swagger Docs</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Metrics Grid -->
+    <section id="metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-xs font-mono uppercase tracking-wider text-violet-400">RAG Strategy</span>
+          <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-black text-white font-mono tracking-tight">Hybrid RAG</div>
+        <p class="text-xs text-slate-400 mt-2">Vector similarity clustering + dynamic re-ranking for contextual document answers.</p>
+        <div class="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full bg-violet-400 w-full rounded-full"></div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-xs font-mono uppercase tracking-wider text-sky-400">Containerization</span>
+          <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+            <i data-lucide="box" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-black text-white font-mono tracking-tight">Multi-Stage Docker</div>
+        <p class="text-xs text-slate-400 mt-2">Ultra-lean container builds isolating FastAPI backend and React Vite frontend.</p>
+        <div class="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full bg-sky-400 w-11/12 rounded-full"></div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-xs font-mono uppercase tracking-wider text-emerald-400">Orchestration</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <i data-lucide="git-pull-request" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="text-3xl font-black text-white font-mono tracking-tight">Automated CI/CD</div>
+        <p class="text-xs text-slate-400 mt-2">Kubernetes manifest automation with health probes, rolling updates, and Minikube deploy.</p>
+        <div class="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full bg-emerald-400 w-full rounded-full"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture Diagram -->
+    <section id="architecture" class="space-y-6">
+      <div class="border-b border-slate-800 pb-4">
+        <div class="text-xs font-mono text-violet-400 uppercase tracking-widest">RAG Data Pipeline</div>
+        <h2 class="text-2xl font-bold text-white mt-1">Document Ingestion & Synthesis Flow</h2>
+      </div>
+
+      <div class="glass-panel p-8 rounded-2xl space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Step 1 -->
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-mono font-bold text-xs">01</div>
+            <h4 class="font-semibold text-sm text-slate-100">PDF Upload</h4>
+            <p class="text-xs text-slate-400">Multi-document asynchronous streaming upload via FastAPI with validation & mime check.</p>
+            <span class="inline-block text-[10px] font-mono text-sky-400 bg-sky-950/50 px-2 py-0.5 rounded">FastAPI Multipart</span>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center font-mono font-bold text-xs">02</div>
+            <h4 class="font-semibold text-sm text-slate-100">Chunking & Embedding</h4>
+            <p class="text-xs text-slate-400">Sliding window semantic splitting with sentence-transformers generating localized embeddings.</p>
+            <span class="inline-block text-[10px] font-mono text-violet-400 bg-violet-950/50 px-2 py-0.5 rounded">all-MiniLM-L6-v2</span>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs">03</div>
+            <h4 class="font-semibold text-sm text-slate-100">Vector Retrieval</h4>
+            <p class="text-xs text-slate-400">HNSW indexed similarity search matching top-K chunks with cosine threshold scoring.</p>
+            <span class="inline-block text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded">ChromaDB Store</span>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 border-violet-500/40 glow-violet">
+            <div class="w-8 h-8 rounded-lg bg-fuchsia-500/10 text-fuchsia-400 flex items-center justify-center font-mono font-bold text-xs">04</div>
+            <h4 class="font-semibold text-sm text-slate-100">Gemini Synthesis</h4>
+            <p class="text-xs text-slate-400">Google Gemini 2.5 Flash compiles retrieved context into citations and accurate answers.</p>
+            <span class="inline-block text-[10px] font-mono text-fuchsia-400 bg-fuchsia-950/50 px-2 py-0.5 rounded">Gemini LLM</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Docker & Kubernetes Deployment -->
+    <section id="docker" class="space-y-6">
+      <div class="border-b border-slate-800 pb-4">
+        <div class="text-xs font-mono text-violet-400 uppercase tracking-widest">DevOps Execution</div>
+        <h2 class="text-2xl font-bold text-white mt-1">Docker Compose & Local Spin-up</h2>
+      </div>
+
+      <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+        <div class="bg-slate-900/90 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+            <span class="ml-2 font-mono text-xs text-slate-400">terminal — multi-engine-doc-intel</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-500">Docker Compose &bull; Minikube</span>
+        </div>
+
+        <div class="p-6 font-mono text-sm space-y-4 bg-slate-950/95 overflow-x-auto">
+          <div>
+            <span class="text-slate-500"># 1. Provide Gemini API Key</span>
+            <div class="text-violet-300 mt-1"><code>echo "GEMINI_API_KEY=your_key_here" > .env</code></div>
+          </div>
+          <div>
+            <span class="text-slate-500"># 2. Build and run containers via Docker Compose</span>
+            <div class="text-violet-300 mt-1"><code>docker-compose up --build</code></div>
+          </div>
+          <div>
+            <span class="text-slate-500"># 3. Access endpoints</span>
+            <div class="text-emerald-400 mt-1">
+              <code>Frontend UI: http://localhost:5173</code><br />
+              <code>API Swagger: http://localhost:8000/docs</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Note -->
+    <footer class="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+      <div>Multi-Engine Document Intelligence &bull; Production Architecture Showcase</div>
+      <div class="font-mono">FastAPI &bull; LangChain &bull; Docker &bull; Kubernetes</div>
+    </footer>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

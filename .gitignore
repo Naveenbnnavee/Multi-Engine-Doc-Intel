@@ -1,0 +1,29 @@
+# Python environment & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Environment secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Vector store and temp data
+chroma_db/
+data/
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.pnpm-store/
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

@@ -122,9 +122,92 @@ async def upload_pdf(file: UploadFile = File(...)):
             except OSError:
                 pass
 
+# Global state for cached working model and discovered model candidates
+CACHED_WORKING_MODEL: Optional[str] = None
+DISCOVERED_MODELS_CACHE: Optional[list] = None
+
+def discover_available_gemini_models() -> list:
+    """
+    Dynamically queries Google Generative AI to discover models available 
+    for the active API key that support generateContent, prioritizing Flash models.
+    """
+    global DISCOVERED_MODELS_CACHE
+    if DISCOVERED_MODELS_CACHE:
+        return DISCOVERED_MODELS_CACHE
+
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    discovered = []
+
+    # Priority 1: Explicit environment variable override
+    custom_model = os.getenv("GEMINI_MODEL")
+    if custom_model and custom_model.strip():
+        discovered.append(custom_model.strip())
+
+    if api_key:
+        # Priority 2: Programmatic Discovery via official google.genai Client
+        try:
+            from google import genai
+            client = genai.Client(api_key=api_key)
+            for m in client.models.list():
+                actions = getattr(m, "supported_actions", []) or getattr(m, "supported_generation_methods", [])
+                if not actions or "generateContent" in actions:
+                    name = getattr(m, "name", "")
+                    if name.startswith("models/"):
+                        name = name[len("models/"):]
+                    if name and name not in discovered:
+                        discovered.append(name)
+            if discovered:
+                logger.info(f"Discovered {len(discovered)} active models via google.genai Client: {discovered[:6]}")
+        except Exception as e:
+            logger.warning(f"Programmatic models.list() discovery returned: {e}. Trying REST endpoint...")
+
+        # Priority 3: Direct REST endpoint discovery
+        if not discovered or len(discovered) <= 1:
+            try:
+                import httpx
+                url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+                with httpx.Client(timeout=4.0) as http_client:
+                    resp = http_client.get(url)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        for m in data.get("models", []):
+                            methods = m.get("supportedGenerationMethods", [])
+                            if not methods or "generateContent" in methods:
+                                name = m.get("name", "")
+                                if name.startswith("models/"):
+                                    name = name[len("models/"):]
+                                if name and name not in discovered:
+                                    discovered.append(name)
+                        if discovered:
+                            logger.info(f"Discovered {len(discovered)} active models via REST endpoint: {discovered[:6]}")
+            except Exception as e:
+                logger.warning(f"REST models discovery returned: {e}")
+
+    # Priority 4: Verified 2026 production model candidates (including Google's recommended gemini-3.8-flash)
+    known_candidates = [
+        "gemini-3.8-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash"
+    ]
+    for candidate in known_candidates:
+        if candidate not in discovered:
+            discovered.append(candidate)
+
+    # Sort so that Flash models come first (highest throughput, lowest latency, cost-effective for RAG)
+    flash_models = [m for m in discovered if "flash" in m.lower()]
+    other_models = [m for m in discovered if "flash" not in m.lower()]
+    sorted_models = flash_models + other_models
+
+    DISCOVERED_MODELS_CACHE = sorted_models
+    logger.info(f"Final ordered candidate models: {sorted_models[:6]}")
+    return sorted_models
+
 @app.post("/chat")
 async def chat_with_pdf(request: ChatRequest):
-    global vector_db
+    global vector_db, CACHED_WORKING_MODEL
     if vector_db is None:
         raise HTTPException(status_code=400, detail="No document uploaded yet. Please upload a PDF first.")
 
@@ -135,12 +218,10 @@ async def chat_with_pdf(request: ChatRequest):
     try:
         retriever = vector_db.as_retriever(search_kwargs={"k": 5})
         
-        # Resilient Gemini Model Selection: Read from env or try standard candidate models
-        configured_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
-        candidate_models = [configured_model]
-        for fallback in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]:
-            if fallback not in candidate_models:
-                candidate_models.append(fallback)
+        # Discover and sort available Gemini models dynamically
+        candidates = discover_available_gemini_models()
+        if CACHED_WORKING_MODEL and CACHED_WORKING_MODEL in candidates:
+            candidates = [CACHED_WORKING_MODEL] + [m for m in candidates if m != CACHED_WORKING_MODEL]
         
         system_prompt = (
             "You are an intelligent assistant. Use the following pieces of retrieved context "
@@ -155,18 +236,28 @@ async def chat_with_pdf(request: ChatRequest):
         ])
         
         last_error = None
-        for model_name in candidate_models:
+        for model_name in candidates:
             try:
+                logger.info(f"Attempting synthesis with model: '{model_name}'")
                 llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.3)
                 question_answer_chain = create_stuff_documents_chain(llm, prompt)
                 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
                 response = rag_chain.invoke({"input": user_query})
+                
+                # Cache successful model for subsequent queries
+                CACHED_WORKING_MODEL = model_name
+                logger.info(f"Synthesis succeeded with model: '{model_name}'")
                 return {"answer": response["answer"], "model_used": model_name}
             except Exception as model_err:
                 logger.warning(f"Candidate model '{model_name}' failed: {model_err}. Trying fallback...")
                 last_error = model_err
 
         logger.error(f"All candidate models failed in RAG chain: {last_error}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to synthesize response. Ensure valid GEMINI_API_KEY is configured.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unhandled error in chat pipeline: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to synthesize response. Ensure valid GEMINI_API_KEY is configured.")
 
 @app.get("/health")

@@ -126,6 +126,17 @@ async def upload_pdf(file: UploadFile = File(...)):
 CACHED_WORKING_MODEL: Optional[str] = None
 DISCOVERED_MODELS_CACHE: Optional[list] = None
 
+def is_valid_text_chat_model(name: str) -> bool:
+    """Filter out speech/audio/vision-only and TTS models that cannot perform chat synthesis."""
+    name_lower = name.lower()
+    banned_substrings = [
+        "tts", "audio", "voice", "speech", "image", "imagen", 
+        "embed", "realtime", "live", "vision-preview"
+    ]
+    if any(b in name_lower for b in banned_substrings):
+        return False
+    return name_lower.startswith("gemini")
+
 def discover_available_gemini_models() -> list:
     """
     Dynamically queries Google Generative AI to discover models available 
@@ -154,10 +165,10 @@ def discover_available_gemini_models() -> list:
                     name = getattr(m, "name", "")
                     if name.startswith("models/"):
                         name = name[len("models/"):]
-                    if name and name not in discovered:
+                    if name and is_valid_text_chat_model(name) and name not in discovered:
                         discovered.append(name)
             if discovered:
-                logger.info(f"Discovered {len(discovered)} active models via google.genai Client: {discovered[:6]}")
+                logger.info(f"Discovered {len(discovered)} active text models via google.genai Client.")
         except Exception as e:
             logger.warning(f"Programmatic models.list() discovery returned: {e}. Trying REST endpoint...")
 
@@ -176,33 +187,38 @@ def discover_available_gemini_models() -> list:
                                 name = m.get("name", "")
                                 if name.startswith("models/"):
                                     name = name[len("models/"):]
-                                if name and name not in discovered:
+                                if name and is_valid_text_chat_model(name) and name not in discovered:
                                     discovered.append(name)
                         if discovered:
-                            logger.info(f"Discovered {len(discovered)} active models via REST endpoint: {discovered[:6]}")
+                            logger.info(f"Discovered {len(discovered)} active text models via REST endpoint.")
             except Exception as e:
                 logger.warning(f"REST models discovery returned: {e}")
 
-    # Priority 4: Verified 2026 production model candidates (including Google's recommended gemini-3.8-flash)
+    # Priority 4: Verified production text model candidates
     known_candidates = [
+        "gemini-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
         "gemini-3.8-flash",
         "gemini-3.6-flash",
         "gemini-3.5-flash-lite",
-        "gemini-flash-latest",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash"
+        "gemini-1.5-pro",
+        "gemini-2.0-pro"
     ]
     for candidate in known_candidates:
         if candidate not in discovered:
             discovered.append(candidate)
 
+    # Filter strictly for valid conversational text models
+    clean_discovered = [m for m in discovered if is_valid_text_chat_model(m)]
+
     # Sort so that Flash models come first (highest throughput, lowest latency, cost-effective for RAG)
-    flash_models = [m for m in discovered if "flash" in m.lower()]
-    other_models = [m for m in discovered if "flash" not in m.lower()]
+    flash_models = [m for m in clean_discovered if "flash" in m.lower()]
+    other_models = [m for m in clean_discovered if "flash" not in m.lower()]
     sorted_models = flash_models + other_models
 
     DISCOVERED_MODELS_CACHE = sorted_models
-    logger.info(f"Final ordered candidate models: {sorted_models[:6]}")
+    logger.info(f"Final ordered candidate text models: {sorted_models[:6]}")
     return sorted_models
 
 @app.post("/chat")
@@ -216,7 +232,7 @@ async def chat_with_pdf(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Query message cannot be empty.")
 
     try:
-        retriever = vector_db.as_retriever(search_kwargs={"k": 5})
+        retriever = vector_db.as_retriever(search_kwargs={"k": 4})
         
         # Discover and sort available Gemini models dynamically
         candidates = discover_available_gemini_models()
@@ -239,7 +255,12 @@ async def chat_with_pdf(request: ChatRequest):
         for model_name in candidates:
             try:
                 logger.info(f"Attempting synthesis with model: '{model_name}'")
-                llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.3)
+                llm = ChatGoogleGenerativeAI(
+                    model=model_name,
+                    temperature=0.2,
+                    max_retries=1,
+                    timeout=12.0
+                )
                 question_answer_chain = create_stuff_documents_chain(llm, prompt)
                 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
                 response = rag_chain.invoke({"input": user_query})
@@ -249,7 +270,7 @@ async def chat_with_pdf(request: ChatRequest):
                 logger.info(f"Synthesis succeeded with model: '{model_name}'")
                 return {"answer": response["answer"], "model_used": model_name}
             except Exception as model_err:
-                logger.warning(f"Candidate model '{model_name}' failed: {model_err}. Trying fallback...")
+                logger.warning(f"Candidate model '{model_name}' failed: {model_err}. Fast failover to next model...")
                 last_error = model_err
 
         logger.error(f"All candidate models failed in RAG chain: {last_error}", exc_info=True)

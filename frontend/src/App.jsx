@@ -54,9 +54,39 @@ export default function App() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [activeFile, setActiveFile] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [isWaking, setIsWaking] = useState(false);
+  const [wakeSeconds, setWakeSeconds] = useState(0);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const triggerWake = () => {
+    if (isWaking || backendStatus === 'online') return;
+    setIsWaking(true);
+    setWakeSeconds(0);
+
+    // Immediate ping to initiate container spin-up
+    fetch(`${apiUrl}/health`).catch(() => {});
+
+    const timer = setInterval(async () => {
+      setWakeSeconds((prev) => prev + 2);
+      try {
+        const res = await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          clearInterval(timer);
+          setIsWaking(false);
+          setBackendStatus('online');
+        }
+      } catch {
+        // Container still warming up
+      }
+    }, 2000);
+
+    setTimeout(() => {
+      clearInterval(timer);
+      setIsWaking(false);
+    }, 90000);
+  };
 
   // Check backend health periodically
   useEffect(() => {
@@ -264,6 +294,27 @@ export default function App() {
                 {backendStatus === 'online' ? 'Online' : backendStatus === 'checking' ? 'Connecting' : 'API Sleeping'}
               </span>
             </div>
+
+            {/* Wake Button for Render Free Tier */}
+            <button
+              onClick={triggerWake}
+              disabled={isWaking || backendStatus === 'online'}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono border transition-all ${
+                backendStatus === 'online'
+                  ? 'bg-zinc-900/40 text-zinc-500 border-zinc-800 cursor-default opacity-60'
+                  : isWaking
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 animate-pulse cursor-wait'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30 cursor-pointer shadow-sm hover:scale-[1.02]'
+              }`}
+              title={
+                backendStatus === 'online'
+                  ? 'Render API is active and healthy'
+                  : 'Click to spin up sleeping Render container (free tier takes ~30-50s)'
+              }
+            >
+              <Zap className={`w-3.5 h-3.5 ${isWaking ? 'animate-bounce text-amber-400' : 'text-amber-400'}`} />
+              <span>{isWaking ? `Waking (${wakeSeconds}s)...` : backendStatus === 'online' ? 'Active' : 'Wake API'}</span>
+            </button>
 
             {/* Settings Trigger */}
             <button
@@ -631,6 +682,27 @@ export default function App() {
 
           {/* Main Chat Conversation Column */}
           <section className="flex-1 linear-panel rounded-xl flex flex-col h-[calc(100vh-7.5rem)] overflow-hidden">
+            {/* Render Free Tier Cold-Sleep Notice */}
+            {backendStatus !== 'online' && (
+              <div className="mx-4 sm:mx-6 mt-3.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-amber-300">
+                  <Zap className={`w-4 h-4 flex-shrink-0 ${isWaking ? 'animate-bounce text-amber-400' : 'text-amber-400'}`} />
+                  <span>
+                    {isWaking
+                      ? `Waking Render container... pinging /health (${wakeSeconds}s)`
+                      : 'Render backend is in free-tier sleep (takes ~30-50s to spin up).'}
+                  </span>
+                </div>
+                <button
+                  onClick={triggerWake}
+                  disabled={isWaking}
+                  className="px-2.5 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 font-medium text-[11px] transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  {isWaking ? `Waking (${wakeSeconds}s)...` : '⚡ Wake Container'}
+                </button>
+              </div>
+            )}
+
             {/* Chat Messages Stream */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {messages.length === 0 ? (

@@ -40,6 +40,7 @@ app = FastAPI(
 )
 
 # --- CORS POLICY ---
+# Dynamically loads allowed origins from environment variable ALLOWED_ORIGINS
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 allowed_origins = [
     origin.strip()
@@ -47,11 +48,12 @@ allowed_origins = [
     if origin.strip()
 ]
 default_origins = [
+    "https://multi-engine-doc-intel.vercel.app",
+    "https://multi-engine-doc-intel.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "https://pdf-chatter-1.onrender.com"
+    "http://127.0.0.1:8000"
 ]
 for origin in default_origins:
     if origin not in allowed_origins:
@@ -60,7 +62,7 @@ for origin in default_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"^https://[a-zA-Z0-9-]+\.onrender\.com$",
+    allow_origin_regex=r"^https://([a-zA-Z0-9-]+\.)?(vercel\.app|onrender\.com)$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],

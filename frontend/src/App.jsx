@@ -29,9 +29,17 @@ export default function App() {
   // Navigation: 'overview' (Portfolio / How It Works) or 'chat' (Interactive Workspace)
   const [viewMode, setViewMode] = useState('overview');
 
-  // Backend API configuration
+  // Backend API configuration - dynamically loaded from Vite environment variable
   const [apiUrl, setApiUrl] = useState(() => {
-    return localStorage.getItem('docintel_api_url') || 'https://pdf-chatter-ouph.onrender.com';
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+      return envUrl.trim().replace(/\/+$/, '');
+    }
+    const saved = localStorage.getItem('docintel_api_url');
+    if (saved && !saved.includes('pdf-chatter-ouph')) {
+      return saved.replace(/\/+$/, '');
+    }
+    return 'https://multi-engine-doc-intel.onrender.com';
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiUrl, setTempApiUrl] = useState(apiUrl);
@@ -761,7 +769,7 @@ export default function App() {
                   type="url"
                   value={tempApiUrl}
                   onChange={(e) => setTempApiUrl(e.target.value)}
-                  placeholder="https://pdf-chatter-ouph.onrender.com"
+                  placeholder="https://multi-engine-doc-intel.onrender.com"
                   required
                   className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none"
                 />

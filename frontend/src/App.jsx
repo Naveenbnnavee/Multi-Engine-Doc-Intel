@@ -9,7 +9,6 @@ import {
   Copy,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   ShieldCheck,
   Zap,
   Cpu,
@@ -18,18 +17,19 @@ import {
   Terminal,
   RefreshCw,
   Settings,
-  HelpCircle,
-  ExternalLink,
   Bot,
   User,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  Activity,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function App() {
-  // Navigation: 'overview' (Portfolio / How It Works) or 'chat' (Interactive Workspace)
+  // Navigation: 'overview' (System Architecture & Portfolio) or 'chat' (Interactive Document Workbench)
   const [viewMode, setViewMode] = useState('overview');
 
-  // Backend API configuration - dynamically loaded from Vite environment variable
+  // Backend API configuration - dynamically resolved from Vite environment variables or localStorage
   const [apiUrl, setApiUrl] = useState(() => {
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
@@ -41,6 +41,7 @@ export default function App() {
     }
     return 'https://multi-engine-doc-intel.onrender.com';
   });
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiUrl, setTempApiUrl] = useState(apiUrl);
   const [backendStatus, setBackendStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
@@ -109,13 +110,12 @@ export default function App() {
       });
 
       if (response.ok) {
-        setUploadStatus('Vectorized & Ready for Analysis!');
-        // Automatically switch to chat view if still on overview
+        setUploadStatus('Vectorized & Ready for Analysis');
         setViewMode('chat');
         setMessages([
           {
             sender: 'bot',
-            text: `📄 **Document Indexed Successfully:** \`${file.name}\`\n\nAll text chunks have been vectorized into our in-memory ChromaDB vector store using FastEmbed (BAAI/bge-small-en-v1.5). You can now ask questions, request summaries, or extract key points.`
+            text: `📄 **Document Vectorized:** \`${file.name}\`\n\nText segments have been embedded into the in-memory ChromaDB vector store using local FastEmbed (BAAI/bge-small-en-v1.5). You can now ask questions, request bulleted summaries, or perform semantic data extraction.`
           }
         ]);
       } else {
@@ -124,7 +124,7 @@ export default function App() {
         setActiveFile('');
       }
     } catch {
-      setUploadStatus('Could not reach backend API. Check Render URL.');
+      setUploadStatus('Could not reach backend API. Verify Render endpoint.');
       setActiveFile('');
     } finally {
       setIsUploading(false);
@@ -160,7 +160,7 @@ export default function App() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { text: '⚠️ Unable to reach the backend service. If hosted on Render free tier, the container may be waking up (please retry in 20 seconds).', sender: 'error' }
+        { text: '⚠️ Unable to reach backend. If the free-tier container is waking up, please retry in 15 seconds.', sender: 'error' }
       ]);
     } finally {
       setIsTyping(false);
@@ -183,92 +183,92 @@ export default function App() {
 
   const starterQuestions = [
     'Summarize the core takeaways in 3 concise bullet points.',
-    'What are the primary conclusions or outcomes mentioned?',
+    'What are the primary conclusions or metrics stated?',
     'Identify any critical dates, deadlines, or timelines.',
     'Extract all limitations, caveats, or risks stated in the text.'
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-violet-500/30 selection:text-violet-200">
-      {/* Top Application Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+    <div className="min-h-screen bg-[#09090b] text-[#f4f4f5] flex flex-col font-sans selection:bg-zinc-800 selection:text-white subtle-grid">
+      {/* Top Application Header - Linear Minimalist Style */}
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#09090b]/90 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setViewMode('overview')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 p-0.5 shadow-lg shadow-violet-500/20 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <FileText className="w-5 h-5 text-violet-400" />
-              </div>
+          <div 
+            className="flex items-center gap-2.5 cursor-pointer select-none" 
+            onClick={() => setViewMode('overview')}
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#16171a] border border-white/10 flex items-center justify-center text-zinc-200">
+              <FileText className="w-4 h-4 text-zinc-300" />
             </div>
-            <div>
-              <div className="font-bold text-base tracking-tight flex items-center gap-2">
-                <span>DocIntel AI</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300 border border-violet-500/30 font-medium">
-                  RAG v2.4
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">Multi-Engine Document Intelligence</p>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm tracking-tight text-white">DocIntel</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+                v2.4
+              </span>
             </div>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <nav className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          {/* Mode Switcher Tabs - Linear Segmented Control */}
+          <nav className="flex items-center bg-[#121316] p-1 rounded-lg border border-white/[0.08]">
             <button
               onClick={() => setViewMode('overview')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 viewMode === 'overview'
-                  ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-800 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Overview & Architecture</span>
+              <span>Architecture & Blueprint</span>
             </button>
             <button
               onClick={() => setViewMode('chat')}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all relative ${
                 viewMode === 'chat'
-                  ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-zinc-800 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-              <span>Document Workspace</span>
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Document Workbench</span>
               {activeFile && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Document Loaded"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Document Loaded"></span>
               )}
             </button>
           </nav>
 
           {/* Status & Settings */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Backend Health Badge */}
             <div
-              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono border ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono border ${
                 backendStatus === 'online'
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  ? 'bg-zinc-900/80 text-emerald-400 border-emerald-500/20'
                   : backendStatus === 'checking'
-                  ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
-                  : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                  ? 'bg-zinc-900/80 text-amber-400 border-amber-500/20'
+                  : 'bg-zinc-900/80 text-rose-400 border-rose-500/20'
               }`}
-              title={`API endpoint: ${apiUrl}`}
+              title={`API target: ${apiUrl}`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
+                className={`w-1.5 h-1.5 rounded-full ${
                   backendStatus === 'online'
-                    ? 'bg-emerald-400 animate-pulse'
+                    ? 'bg-emerald-400'
                     : backendStatus === 'checking'
-                    ? 'bg-yellow-400'
+                    ? 'bg-amber-400 animate-pulse'
                     : 'bg-rose-400'
                 }`}
               ></span>
-              <span>{backendStatus === 'online' ? 'API Online' : backendStatus === 'checking' ? 'Checking' : 'API Sleeping'}</span>
+              <span className="text-[11px]">
+                {backendStatus === 'online' ? 'Online' : backendStatus === 'checking' ? 'Connecting' : 'API Sleeping'}
+              </span>
             </div>
 
-            {/* Settings Button */}
+            {/* Settings Trigger */}
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-colors"
+              className="p-1.5 rounded-md bg-[#121316] border border-white/[0.08] text-zinc-400 hover:text-zinc-100 hover:border-white/20 transition-colors"
               title="Configure API Endpoint"
             >
               <Settings className="w-4 h-4" />
@@ -277,227 +277,249 @@ export default function App() {
         </div>
       </header>
 
-      {/* VIEW 1: PORTFOLIO & ARCHITECTURE SHOWCASE ("About that project & How it works") */}
+      {/* VIEW 1: PORTFOLIO & ARCHITECTURE SHOWCASE (Engineering Blueprint) */}
       {viewMode === 'overview' && (
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-16">
+        <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-12">
           {/* Hero Section */}
-          <section className="text-center max-w-3xl mx-auto space-y-6 pt-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-mono font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Multi-Engine RAG Pipeline • Zero Embedding API Surcharge</span>
+          <section className="space-y-4 pt-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#121316] border border-white/[0.08] text-zinc-400 text-xs font-mono">
+              <Activity className="w-3.5 h-3.5 text-zinc-300" />
+              <span>SYSTEM SPECIFICATION // RAG INFERENCE PIPELINE</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Enterprise Document Intelligence & Conversational RAG
+            <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
+              Enterprise Document Intelligence Engine
             </h1>
 
-            <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
-              Ground high-parameter reasoning in verified document context. Orchestrates local{' '}
-              <strong className="text-cyan-400 font-semibold">FastEmbed 384D</strong> vectorization, in-memory{' '}
-              <strong className="text-violet-400 font-semibold">ChromaDB</strong> similarity indexing, and{' '}
-              <strong className="text-emerald-400 font-semibold">Google Gemini 2.5 Flash</strong> synthesis without server data retention.
+            <p className="text-zinc-400 text-base leading-relaxed max-w-3xl">
+              An architectural implementation for grounded document reasoning. Orchestrates in-memory 
+              PyPDF extraction, local <strong className="text-zinc-200 font-medium">FastEmbed 384D</strong> vectorization via ONNX runtime, 
+              ephemeral <strong className="text-zinc-200 font-medium">ChromaDB</strong> cosine similarity indexing, and 
+              <strong className="text-zinc-200 font-medium"> Google Gemini Flash</strong> synthesis with zero server disk persistence.
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => setViewMode('chat')}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-95 shadow-xl shadow-violet-600/25 flex items-center gap-2 transition-all group"
+                className="px-5 py-2.5 rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs hover:bg-white transition-colors inline-flex items-center gap-2"
               >
-                <span>Launch Document Chatbot</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>Launch Document Workbench</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <a
-                href="#how-it-works"
-                className="px-6 py-3.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 font-medium text-sm hover:text-white hover:border-slate-700 transition-colors flex items-center gap-2"
+                href="#pipeline-blueprint"
+                className="px-4 py-2.5 rounded-lg bg-[#121316] border border-white/[0.08] text-zinc-300 font-medium text-xs hover:text-white hover:border-white/20 transition-colors inline-flex items-center gap-2"
               >
-                <span>Explore Processing Flow</span>
+                <span>View Technical Flow</span>
+              </a>
+              <a
+                href="https://github.com/Naveenbnnavee/Multi-Engine-Doc-Intel"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2.5 rounded-lg bg-[#121316] border border-white/[0.08] text-zinc-300 font-medium text-xs hover:text-white hover:border-white/20 transition-colors inline-flex items-center gap-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                <span>GitHub Repository</span>
               </a>
             </div>
           </section>
 
-          {/* Key Metrics Grid */}
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800/80 hover:border-violet-500/40 transition-colors">
-              <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest flex items-center gap-1.5 mb-2">
-                <Zap className="w-3.5 h-3.5" /> Turnaround
+          {/* Key Metrics / System Invariants */}
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="linear-panel p-5 rounded-xl">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <Zap className="w-3.5 h-3.5 text-zinc-300" /> Ingestion Time
               </div>
-              <div className="text-3xl font-black text-white font-mono tracking-tight">&lt; 180ms</div>
-              <p className="text-xs text-slate-400 mt-2">In-memory vector retrieval with PyPDF extraction.</p>
+              <div className="text-2xl font-semibold text-white font-mono tracking-tight">&lt; 180ms</div>
+              <p className="text-xs text-zinc-500 mt-2">In-memory PyPDF parsing with 1000c/200o chunk windowing.</p>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800/80 hover:border-violet-500/40 transition-colors">
-              <div className="text-xs font-mono text-violet-400 uppercase tracking-widest flex items-center gap-1.5 mb-2">
-                <Database className="w-3.5 h-3.5" /> Geometry
+            <div className="linear-panel p-5 rounded-xl">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <Database className="w-3.5 h-3.5 text-zinc-300" /> Vector Space
               </div>
-              <div className="text-3xl font-black text-white font-mono tracking-tight">384-Dim</div>
-              <p className="text-xs text-slate-400 mt-2">Dense cosine semantic space via BAAI/bge-small-en-v1.5.</p>
+              <div className="text-2xl font-semibold text-white font-mono tracking-tight">384-Dim</div>
+              <p className="text-xs text-zinc-500 mt-2">Dense cosine semantic space via BAAI/bge-small-en-v1.5.</p>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800/80 hover:border-emerald-500/40 transition-colors">
-              <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-2">
-                <ShieldCheck className="w-3.5 h-3.5" /> Privacy
+            <div className="linear-panel p-5 rounded-xl">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-zinc-300" /> Data Isolation
               </div>
-              <div className="text-3xl font-black text-white font-mono tracking-tight">$0 / 100%</div>
-              <p className="text-xs text-slate-400 mt-2">Ephemeral in-memory vectors with zero persistent disk egress.</p>
+              <div className="text-2xl font-semibold text-white font-mono tracking-tight">Zero Disk</div>
+              <p className="text-xs text-zinc-500 mt-2">Ephemeral vector collections purged upon session termination.</p>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800/80 hover:border-cyan-500/40 transition-colors">
-              <div className="text-xs font-mono text-purple-400 uppercase tracking-widest flex items-center gap-1.5 mb-2">
-                <Cpu className="w-3.5 h-3.5" /> Synthesis
+            <div className="linear-panel p-5 rounded-xl">
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <Cpu className="w-3.5 h-3.5 text-zinc-300" /> LLM Engine
               </div>
-              <div className="text-3xl font-black text-white font-mono tracking-tight">Gemini 2.5</div>
-              <p className="text-xs text-slate-400 mt-2">Strict context grounding to eliminate model hallucinations.</p>
-            </div>
-          </section>
-
-          {/* How It Works Pipeline */}
-          <section id="how-it-works" className="space-y-6 pt-4">
-            <div className="border-b border-slate-800 pb-4">
-              <div className="text-xs font-mono text-violet-400 uppercase tracking-widest">Pipeline Architecture</div>
-              <h2 className="text-2xl font-bold text-white mt-1">How Multi-Engine Document Intelligence Works</h2>
-              <p className="text-sm text-slate-400 mt-1">A transparent 4-stage pipeline from raw PDF ingestion to contextually verified answers.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 relative overflow-hidden">
-                <span className="text-xs font-mono text-violet-400 font-bold">STAGE 01</span>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                  <span>PDF Ingestion</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  PyPDF loads the uploaded binary in-memory. RecursiveCharacterTextSplitter shards content into 1,000-character chunks with 200-char semantic boundary overlap.
-                </p>
-              </div>
-
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 relative overflow-hidden">
-                <span className="text-xs font-mono text-cyan-400 font-bold">STAGE 02</span>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-violet-400" />
-                  <span>FastEmbed Vectors</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Local ONNX-accelerated FastEmbed embeddings run directly on the ASGI runtime. Computes 384-dimensional dense embeddings without external API network latency.
-                </p>
-              </div>
-
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 relative overflow-hidden">
-                <span className="text-xs font-mono text-emerald-400 font-bold">STAGE 03</span>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Database className="w-4 h-4 text-emerald-400" />
-                  <span>ChromaDB Retrieval</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Chroma index computes cosine similarity over document chunks. Filters and ranks the top-5 most relevant text passages for every user prompt in &lt;50ms.
-                </p>
-              </div>
-
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3 relative overflow-hidden">
-                <span className="text-xs font-mono text-purple-400 font-bold">STAGE 04</span>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
-                  <span>Gemini Synthesis</span>
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  LangChain LCEL chain injects retrieved chunks into a fortified system prompt. Google Gemini 2.5 Flash synthesizes clean markdown answers strictly from context.
-                </p>
-              </div>
+              <div className="text-2xl font-semibold text-white font-mono tracking-tight">Gemini Flash</div>
+              <p className="text-xs text-zinc-500 mt-2">Deterministic retrieval-grounded synthesis (temp 0.3).</p>
             </div>
           </section>
 
-          {/* DevOps & Tech Specs */}
-          <section className="space-y-4">
-            <div className="border-b border-slate-800 pb-3">
-              <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Stack Specifications</div>
-              <h3 className="text-xl font-bold text-white mt-1">Production Architecture Components</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="glass-card p-5 rounded-xl border border-slate-800">
-                <div className="font-semibold text-white text-sm flex items-center gap-2 mb-1">
-                  <Terminal className="w-4 h-4 text-cyan-400" />
-                  <span>FastAPI + Uvicorn</span>
-                </div>
-                <p className="text-xs text-slate-400">High-concurrency ASGI web framework handling streaming multipart uploads and JSON chat endpoints.</p>
-              </div>
-
-              <div className="glass-card p-5 rounded-xl border border-slate-800">
-                <div className="font-semibold text-white text-sm flex items-center gap-2 mb-1">
-                  <Layers className="w-4 h-4 text-violet-400" />
-                  <span>LangChain LCEL</span>
-                </div>
-                <p className="text-xs text-slate-400">Declarative composition of retrieval, prompt formatting, and LLM inference pipelines with type safety.</p>
-              </div>
-
-              <div className="glass-card p-5 rounded-xl border border-slate-800">
-                <div className="font-semibold text-white text-sm flex items-center gap-2 mb-1">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Zero Data Egress</span>
-                </div>
-                <p className="text-xs text-slate-400">PDFs are held in temporary memory during conversation and purged immediately upon replacement.</p>
-              </div>
-            </div>
-          </section>
-
-          {/* PROJECT LINK CALLOUT BUTTON (As user requested: "at last that project link button as we click it should go to that project ui") */}
-          <section className="pt-6">
-            <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-violet-500/30 bg-gradient-to-br from-slate-900/90 via-violet-950/20 to-slate-900/90 text-center space-y-6 relative overflow-hidden shadow-2xl shadow-violet-950/30">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-violet-600 to-cyan-500 p-0.5 mx-auto shadow-lg shadow-violet-500/30 flex items-center justify-center">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                  <Sparkles className="w-7 h-7 text-cyan-300" />
-                </div>
-              </div>
-
-              <div className="max-w-xl mx-auto space-y-2">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
-                  Ready to Test With Your Own Documents?
-                </h3>
-                <p className="text-sm text-slate-300">
-                  Upload any research paper, financial report, technical manual, or legal agreement to experience instant vector retrieval and grounded chat.
-                </p>
-              </div>
-
+          {/* Pipeline Blueprint & Architecture Flow */}
+          <section id="pipeline-blueprint" className="space-y-4 pt-4">
+            <div className="border-b border-white/[0.08] pb-3 flex items-center justify-between">
               <div>
-                <button
-                  onClick={() => setViewMode('chat')}
-                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 text-white font-bold text-base hover:opacity-95 shadow-xl shadow-violet-600/30 inline-flex items-center gap-3 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <span>Open Document Intelligence Workspace</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+                <div className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Architecture Pipeline</div>
+                <h2 className="text-xl font-semibold text-white mt-1">End-to-End Processing Workflow</h2>
+              </div>
+              <span className="text-xs font-mono text-zinc-500">4-Stage Execution</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="linear-card p-5 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-zinc-500">STAGE 01</span>
+                  <FileText className="w-4 h-4 text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">PDF Ingestion</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  PyPDF loads the binary into memory. RecursiveCharacterTextSplitter shards content into 1,000-character chunks with 200-character semantic boundary overlap.
+                </p>
               </div>
 
-              <p className="text-xs text-slate-500 font-mono">
-                Running live on Render API ({apiUrl.replace('https://', '')})
-              </p>
+              <div className="linear-card p-5 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-zinc-500">STAGE 02</span>
+                  <Cpu className="w-4 h-4 text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">Local Embeddings</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  FastEmbed ONNX engine runs directly inside the ASGI worker process. Generates 384-dimensional dense vectors with zero outbound external API latency.
+                </p>
+              </div>
+
+              <div className="linear-card p-5 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-zinc-500">STAGE 03</span>
+                  <Database className="w-4 h-4 text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">ChromaDB Index</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  In-memory Chroma collection computes cosine similarity over document segments. Returns the top-5 most relevant passages for every user prompt in &lt;50ms.
+                </p>
+              </div>
+
+              <div className="linear-card p-5 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-zinc-500">STAGE 04</span>
+                  <Terminal className="w-4 h-4 text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">LangChain Synthesis</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  LCEL chain injects retrieved chunks into a strict system prompt. Google Gemini Flash synthesizes clean markdown answers strictly from document facts.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Technical Specifications Table */}
+          <section className="space-y-4">
+            <div className="border-b border-white/[0.08] pb-3">
+              <div className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Subsystem Invariants</div>
+              <h3 className="text-lg font-semibold text-white mt-1">Component Design Decisions</h3>
+            </div>
+
+            <div className="linear-panel rounded-xl overflow-hidden border border-white/[0.08]">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#16171a] border-b border-white/[0.08] text-zinc-400 font-mono">
+                  <tr>
+                    <th className="py-2.5 px-4 font-medium">Subsystem</th>
+                    <th className="py-2.5 px-4 font-medium">Implementation</th>
+                    <th className="py-2.5 px-4 font-medium hidden sm:table-cell">Design Rationale</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05] text-zinc-300">
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Terminal className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>API Layer</span>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-zinc-400">FastAPI + Uvicorn ASGI</td>
+                    <td className="py-3 px-4 text-zinc-400 hidden sm:table-cell">Asynchronous non-blocking file streaming and low-overhead JSON query endpoints.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Cpu className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Embedding Model</span>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-zinc-400">FastEmbed (bge-small-en-v1.5)</td>
+                    <td className="py-3 px-4 text-zinc-400 hidden sm:table-cell">Quantized ONNX inference eliminates paid embedding API calls and network latency.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Database className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Vector Index</span>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-zinc-400">ChromaDB Ephemeral Collection</td>
+                    <td className="py-3 px-4 text-zinc-400 hidden sm:table-cell">Zero disk persistence safeguards sensitive corporate documents from permanent retention.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-white flex items-center gap-2">
+                      <Layers className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>LLM Orchestration</span>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-zinc-400">LangChain LCEL Chains</td>
+                    <td className="py-3 px-4 text-zinc-400 hidden sm:table-cell">Strict context boundary enforcement prevents hallucinated outputs outside retrieved context.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* PROJECT LAUNCH CALLOUT (Directly transitions to the Document Workbench) */}
+          <section className="pt-2">
+            <div className="linear-panel p-6 sm:p-8 rounded-xl border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="space-y-1.5 text-center sm:text-left">
+                <h3 className="text-lg font-semibold text-white">
+                  Ready to test with your own documents?
+                </h3>
+                <p className="text-xs text-zinc-400 max-w-xl">
+                  Upload any PDF (research report, contract, financial statement, or technical manual) to verify in-memory vectorization and grounded conversational retrieval.
+                </p>
+                <div className="text-[11px] font-mono text-zinc-500 pt-1">
+                  Active Endpoint: {apiUrl.replace('https://', '')}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setViewMode('chat')}
+                className="px-6 py-3 rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs hover:bg-white transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                <span>Open Document Workbench</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </section>
         </main>
       )}
 
-      {/* VIEW 2: DOCUMENT CHAT WORKSPACE (The fixed, modern UI/UX) */}
+      {/* VIEW 2: DOCUMENT CHAT WORKSPACE (IDE Split View) */}
       {viewMode === 'chat' && (
-        <main className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6 overflow-hidden">
+        <main className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 sm:p-6 gap-4 overflow-hidden">
           {/* Left Control Panel / Document Sidebar */}
-          <aside className="w-full lg:w-80 flex flex-col gap-4">
-            {/* Navigation back to Portfolio */}
+          <aside className="w-full lg:w-80 flex flex-col gap-3">
+            {/* Back Button */}
             <button
               onClick={() => setViewMode('overview')}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-medium transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#121316] border border-white/[0.08] text-zinc-300 hover:text-white hover:border-white/20 text-xs font-medium transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-violet-400" />
-              <span>Back to Architecture & Metrics</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Back to Architecture Blueprint</span>
             </button>
 
             {/* Document Ingestion Card */}
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+            <div className="linear-panel p-4 rounded-xl space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5 font-semibold">
-                  <FileText className="w-4 h-4 text-violet-400" />
+                <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5 font-medium">
+                  <FileText className="w-3.5 h-3.5 text-zinc-300" />
                   <span>Document Source</span>
                 </span>
                 {activeFile && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Vectorized
                   </span>
                 )}
@@ -516,25 +538,29 @@ export default function App() {
                 />
                 <label
                   htmlFor="pdf-upload-input"
-                  className={`border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                  className={`border border-dashed rounded-lg p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
                     isUploading
-                      ? 'border-violet-500 bg-violet-500/5 cursor-wait'
+                      ? 'border-zinc-500 bg-zinc-900/40 cursor-wait'
                       : activeFile
-                      ? 'border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-500'
-                      : 'border-slate-700 hover:border-violet-500/60 bg-slate-900/50 hover:bg-slate-900'
+                      ? 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50'
+                      : 'border-zinc-800 hover:border-zinc-600 bg-[#16171a]/50 hover:bg-[#16171a]'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2.5 ${
-                    isUploading ? 'bg-violet-500/20 text-violet-300 animate-spin' : activeFile ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
+                    isUploading 
+                      ? 'bg-zinc-800 text-zinc-300 animate-spin' 
+                      : activeFile 
+                      ? 'bg-emerald-500/10 text-emerald-400' 
+                      : 'bg-zinc-900 text-zinc-400'
                   }`}>
-                    {isUploading ? <RefreshCw className="w-5 h-5" /> : activeFile ? <Check className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+                    {isUploading ? <RefreshCw className="w-4 h-4" /> : activeFile ? <Check className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
                   </div>
 
-                  <span className="text-xs font-semibold text-slate-200">
-                    {isUploading ? 'Vectorizing Document...' : activeFile ? 'Replace PDF Document' : 'Upload PDF Document'}
+                  <span className="text-xs font-medium text-zinc-200">
+                    {isUploading ? 'Vectorizing Chunks...' : activeFile ? 'Replace PDF Document' : 'Upload PDF Document'}
                   </span>
-                  <span className="text-[11px] text-slate-400 mt-1">
-                    {isUploading ? 'Splitting & indexing chunks...' : 'Click to browse (.pdf format)'}
+                  <span className="text-[11px] text-zinc-500 mt-1">
+                    {isUploading ? 'Splitting & ONNX embedding...' : 'Click to select local .pdf'}
                   </span>
                 </label>
               </div>
@@ -544,9 +570,9 @@ export default function App() {
                 <p className={`text-xs text-center font-mono ${
                   uploadStatus.includes('Ready') || uploadStatus.includes('Vectorized')
                     ? 'text-emerald-400'
-                    : uploadStatus.includes('error') || uploadStatus.includes('failed') || uploadStatus.includes('Could not')
+                    : uploadStatus.includes('failed') || uploadStatus.includes('Could not')
                     ? 'text-rose-400'
-                    : 'text-violet-400'
+                    : 'text-zinc-400'
                 }`}>
                   {uploadStatus}
                 </p>
@@ -554,31 +580,31 @@ export default function App() {
 
               {/* Active Document Details */}
               {activeFile && (
-                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
-                    <FileText className="w-4 h-4" />
+                <div className="p-2.5 rounded-lg bg-[#16171a] border border-white/[0.06] flex items-center gap-2.5">
+                  <div className="p-1.5 rounded bg-zinc-900 text-zinc-300">
+                    <FileText className="w-3.5 h-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-slate-200 truncate">{activeFile}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">Chroma vector index active</div>
+                    <div className="text-xs font-medium text-zinc-200 truncate">{activeFile}</div>
+                    <div className="text-[10px] text-zinc-500 font-mono">Chroma vector index active</div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Suggested Starter Questions */}
-            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-3 hidden sm:block">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5 font-semibold">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            {/* Suggested Starter Prompts */}
+            <div className="linear-panel p-4 rounded-xl space-y-2.5 hidden sm:block">
+              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5 font-medium">
+                <Terminal className="w-3.5 h-3.5 text-zinc-300" />
                 <span>Suggested Prompts</span>
               </span>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {starterQuestions.map((q, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(q)}
                     disabled={!activeFile || isTyping}
-                    className="w-full text-left p-2 rounded-lg bg-slate-900/60 hover:bg-violet-600/10 border border-slate-800/80 hover:border-violet-500/30 text-xs text-slate-300 hover:text-violet-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full text-left p-2 rounded-md bg-[#16171a] hover:bg-zinc-800 border border-white/[0.04] text-xs text-zinc-400 hover:text-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     "{q}"
                   </button>
@@ -586,44 +612,44 @@ export default function App() {
               </div>
             </div>
 
-            {/* Model Telemetry Box */}
-            <div className="glass-card p-4 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 font-mono space-y-1.5">
-              <div className="flex items-center justify-between text-slate-300">
+            {/* Telemetry Status Box */}
+            <div className="linear-card p-3 rounded-lg text-[11px] text-zinc-400 font-mono space-y-1.5">
+              <div className="flex items-center justify-between">
                 <span>Embedder:</span>
-                <span className="text-cyan-400">FastEmbed (384D)</span>
+                <span className="text-zinc-200">FastEmbed 384D</span>
               </div>
-              <div className="flex items-center justify-between text-slate-300">
-                <span>LLM Engine:</span>
-                <span className="text-violet-400">Gemini 2.5 Flash</span>
+              <div className="flex items-center justify-between">
+                <span>Synthesis:</span>
+                <span className="text-zinc-200">Gemini Flash</span>
               </div>
-              <div className="flex items-center justify-between text-slate-300">
-                <span>Vector Space:</span>
+              <div className="flex items-center justify-between">
+                <span>Vector DB:</span>
                 <span className="text-emerald-400">ChromaDB In-Memory</span>
               </div>
             </div>
           </aside>
 
           {/* Main Chat Conversation Column */}
-          <section className="flex-1 glass-panel rounded-2xl border border-slate-800 flex flex-col h-[calc(100vh-8.5rem)] overflow-hidden">
+          <section className="flex-1 linear-panel rounded-xl flex flex-col h-[calc(100vh-7.5rem)] overflow-hidden">
             {/* Chat Messages Stream */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto p-6 space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-violet-600/20 via-indigo-600/20 to-cyan-500/20 border border-violet-500/30 flex items-center justify-center shadow-inner">
-                    <FileText className="w-8 h-8 text-violet-400" />
+                <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto p-6 space-y-3">
+                  <div className="w-12 h-12 rounded-lg bg-[#16171a] border border-white/[0.08] flex items-center justify-center text-zinc-400">
+                    <FileText className="w-6 h-6 text-zinc-300" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-bold text-white">No Document Vectorized Yet</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      Upload any PDF in the left sidebar to start a real-time conversation. The RAG pipeline will extract text, compute vector embeddings, and ground all answers in document facts.
+                    <h3 className="text-sm font-semibold text-white">No Document Vectorized Yet</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Upload a PDF in the left sidebar. The pipeline will parse text, compute embeddings, and ground answers strictly in retrieved chunks.
                     </p>
                   </div>
                   {!activeFile && (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-4 py-2.5 rounded-xl bg-violet-600 text-white font-medium text-xs hover:bg-violet-500 transition-colors inline-flex items-center gap-2"
+                      className="px-3.5 py-2 rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs hover:bg-white transition-colors inline-flex items-center gap-1.5"
                     >
-                      <Upload className="w-4 h-4" />
+                      <Upload className="w-3.5 h-3.5" />
                       <span>Select PDF File</span>
                     </button>
                   )}
@@ -636,27 +662,27 @@ export default function App() {
                       msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
                     }`}
                   >
-                    {/* Avatar */}
+                    {/* Minimalist Avatar */}
                     <div
-                      className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+                      className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-medium ${
                         msg.sender === 'user'
-                          ? 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/20'
+                          ? 'bg-zinc-800 text-zinc-200 border border-white/10'
                           : msg.sender === 'error'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                          : 'bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                          : 'bg-[#16171a] text-zinc-300 border border-white/[0.08]'
                       }`}
                     >
-                      {msg.sender === 'user' ? <User className="w-4 h-4" /> : msg.sender === 'error' ? <AlertCircle className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                      {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : msg.sender === 'error' ? <AlertCircle className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                     </div>
 
                     {/* Bubble */}
                     <div
-                      className={`relative group rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      className={`relative group rounded-xl px-4 py-3 text-xs leading-relaxed ${
                         msg.sender === 'user'
-                          ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-950/40'
+                          ? 'bg-zinc-800 text-white border border-white/[0.08]'
                           : msg.sender === 'error'
-                          ? 'bg-rose-950/40 border border-rose-800 text-rose-200'
-                          : 'bg-slate-900 border border-slate-800 text-slate-200 shadow-sm'
+                          ? 'bg-rose-950/20 border border-rose-900/50 text-rose-200'
+                          : 'bg-[#16171a] border border-white/[0.06] text-zinc-300'
                       }`}
                     >
                       {msg.sender === 'user' ? (
@@ -671,13 +697,13 @@ export default function App() {
                       {msg.sender === 'bot' && (
                         <button
                           onClick={() => copyToClipboard(msg.text, index)}
-                          className="absolute top-2 right-2 p-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Copy message"
+                          className="absolute top-2 right-2 p-1 rounded bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity border border-white/[0.06]"
+                          title="Copy response"
                         >
                           {copiedIndex === index ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="w-3 h-3 text-emerald-400" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="w-3 h-3" />
                           )}
                         </button>
                       )}
@@ -688,13 +714,13 @@ export default function App() {
 
               {/* Typing State Indicator */}
               {isTyping && (
-                <div className="flex gap-3 max-w-xl mr-auto items-center">
-                  <div className="w-8 h-8 rounded-xl bg-violet-600/30 text-violet-300 flex items-center justify-center flex-shrink-0 animate-pulse">
-                    <Bot className="w-4 h-4" />
+                <div className="flex gap-2.5 max-w-xl mr-auto items-center">
+                  <div className="w-7 h-7 rounded-lg bg-[#16171a] border border-white/[0.08] text-zinc-400 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-3.5 h-3.5" />
                   </div>
-                  <div className="glass-card px-4 py-2.5 rounded-2xl border border-violet-500/30 text-xs font-mono text-cyan-300 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                    <span>Retrieving vector chunks and synthesizing...</span>
+                  <div className="linear-card px-3 py-2 rounded-lg text-xs font-mono text-zinc-400 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse"></span>
+                    <span>Synthesizing grounded response...</span>
                   </div>
                 </div>
               )}
@@ -703,7 +729,7 @@ export default function App() {
             </div>
 
             {/* Input Form Bar */}
-            <div className="p-4 border-t border-slate-800/80 bg-slate-950/80">
+            <div className="p-3 sm:p-4 border-t border-white/[0.08] bg-[#09090b]/80">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -717,26 +743,26 @@ export default function App() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={
                     !activeFile
-                      ? 'Please upload a PDF document first...'
+                      ? 'Upload a PDF document first...'
                       : isTyping
-                      ? 'AI is synthesizing...'
-                      : 'Ask a question about the document (e.g., summarize key conclusions)...'
+                      ? 'Synthesizing response...'
+                      : 'Ask a question about the document...'
                   }
                   disabled={!activeFile || isTyping}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-violet-500 rounded-xl px-4 py-3.5 pr-14 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-sans"
+                  className="w-full bg-[#121316] border border-white/[0.08] focus:border-white/20 rounded-lg px-3.5 py-2.5 pr-12 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none transition-all disabled:opacity-40 disabled:cursor-not-allowed font-sans"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isTyping || !activeFile}
-                  className="absolute right-2 p-2.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-violet-600/20"
-                  title="Send message"
+                  className="absolute right-1.5 p-1.5 rounded-md bg-zinc-100 text-zinc-950 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  title="Send query"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                 </button>
               </form>
-              <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-2 font-mono">
-                <span>Grounded exclusively in retrieved PDF chunks.</span>
-                <span>Press Enter to send</span>
+              <div className="flex items-center justify-between text-[10px] text-zinc-500 px-1 pt-2 font-mono">
+                <span>Grounded in retrieved PDF vectors. Zero server disk retention.</span>
+                <span>Enter ↵</span>
               </div>
             </div>
           </section>
@@ -745,25 +771,25 @@ export default function App() {
 
       {/* Backend Settings Modal */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h4 className="text-base font-bold text-white flex items-center gap-2">
-                <Settings className="w-4 h-4 text-violet-400" />
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-[#121316] border border-white/[0.08] rounded-xl p-5 space-y-4 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Settings className="w-4 h-4 text-zinc-400" />
                 <span>Backend API Configuration</span>
               </h4>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="text-slate-400 hover:text-white text-sm p-1 rounded-lg hover:bg-slate-800"
+                className="text-zinc-500 hover:text-zinc-300 text-xs p-1 rounded hover:bg-zinc-800"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={saveApiSettings} className="space-y-4">
+            <form onSubmit={saveApiSettings} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1.5">
-                  Render / Local Backend URL
+                <label className="block text-xs font-mono text-zinc-300 mb-1">
+                  Active Backend URL
                 </label>
                 <input
                   type="url"
@@ -771,10 +797,10 @@ export default function App() {
                   onChange={(e) => setTempApiUrl(e.target.value)}
                   placeholder="https://multi-engine-doc-intel.onrender.com"
                   required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-violet-500 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-100 placeholder-slate-600 focus:outline-none"
+                  className="w-full bg-[#16171a] border border-white/[0.08] focus:border-white/20 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none"
                 />
-                <p className="text-[11px] text-slate-400 mt-1.5">
-                  Enter your active Render URL or local address (e.g. <code>http://localhost:8000</code>).
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  Target Render service URL or local address (e.g. <code>http://localhost:8000</code>).
                 </p>
               </div>
 
@@ -782,13 +808,13 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsSettingsOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition-colors"
+                  className="px-3 py-1.5 rounded-md bg-[#16171a] border border-white/[0.08] text-zinc-300 text-xs hover:bg-zinc-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-violet-600 text-white text-xs font-medium hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
+                  className="px-3.5 py-1.5 rounded-md bg-zinc-100 text-zinc-950 text-xs font-medium hover:bg-white transition-colors"
                 >
                   Save & Reconnect
                 </button>

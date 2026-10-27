@@ -135,8 +135,12 @@ async def chat_with_pdf(request: ChatRequest):
     try:
         retriever = vector_db.as_retriever(search_kwargs={"k": 5})
         
-        # Gemini synthesis
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+        # Resilient Gemini Model Selection: Read from env or try standard candidate models
+        configured_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        candidate_models = [configured_model]
+        for fallback in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]:
+            if fallback not in candidate_models:
+                candidate_models.append(fallback)
         
         system_prompt = (
             "You are an intelligent assistant. Use the following pieces of retrieved context "
@@ -150,16 +154,20 @@ async def chat_with_pdf(request: ChatRequest):
             ("human", "{input}"),
         ])
         
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+        last_error = None
+        for model_name in candidate_models:
+            try:
+                llm = ChatGoogleGenerativeAI(model=model_name, temperature=0.3)
+                question_answer_chain = create_stuff_documents_chain(llm, prompt)
+                rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+                response = rag_chain.invoke({"input": user_query})
+                return {"answer": response["answer"], "model_used": model_name}
+            except Exception as model_err:
+                logger.warning(f"Candidate model '{model_name}' failed: {model_err}. Trying fallback...")
+                last_error = model_err
 
-        response = rag_chain.invoke({"input": user_query})
-        return {"answer": response["answer"]}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error querying RAG pipeline: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to synthesize response. Ensure GEMINI_API_KEY is configured.")
+        logger.error(f"All candidate models failed in RAG chain: {last_error}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to synthesize response. Ensure valid GEMINI_API_KEY is configured.")
 
 @app.get("/health")
 def health_check():
